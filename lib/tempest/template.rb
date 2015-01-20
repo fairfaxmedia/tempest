@@ -10,6 +10,7 @@ module Tempest
     attr_reader :conditions
 
     def initialize(&block)
+      @use         = []
       @resources   = {}
       @parameters  = {}
       @conditions  = {}
@@ -21,16 +22,12 @@ module Tempest
       instance_eval(&block) if block_given?
     end
 
+    def use(template)
+      @use.push(template)
+    end
+
     def description(desc)
       @description = desc
-    end
-
-    def helper(name, &block)
-      @helpers[name] = block
-    end
-
-    def call(name, *args)
-      @helpers[name].call(*args)
     end
 
     def [](id)
@@ -47,15 +44,19 @@ module Tempest
     end
 
     def resource(name)
-      @resources[name] ||= Resource::Ref.new(self, name)
-    end
+      return @resources[name] if resources.include? name
 
-    def substack(name)
-      @resources[name] ||= Resource::SubStack.new(self, name)
+      resource = @use.reduce(nil) {|res, lib| res || lib.parameters[name] }
+
+      @resources[name] = resource || Resource::Ref.new(self, name)
     end
 
     def parameter(name)
-      @parameters[name] ||= Parameter::Ref.new(self, name)
+      return @parameters[name] if @parameters.include? name
+
+      parameter = @use.reduce(nil) {|param, lib| param || lib.parameters[name] }
+
+      @parameters[name] = parameter || Parameter::Ref.new(self, name)
     end
 
     def inherit_parameter(name, parent)
@@ -64,15 +65,27 @@ module Tempest
     end
 
     def mapping(name)
-      @mappings[name] ||= Mapping::Ref.new(self, name)
+      return @mappings[name] if @mappings.include? name
+
+      mapping = @use.reduce(nil) {|map, lib| map || lib.mappings[name] }
+
+      @mappings[name] = mapping || Mapping::Ref.new(self, name)
     end
 
     def condition(name)
-      @conditions[name] ||= Condition::Ref.new(self, name)
+      return @conditions[name] if @conditions.include? name
+
+      condition = @use.reduce(nil) {|cond, lib| cond || lib.conditions[name] }
+
+      @conditions[name] = condition || Condition::Ref.new(self, name)
     end
 
     def factory(name)
-      @factories[name] ||= Factory.new(self, name)
+      return @factories[name] if @factories.include? name
+
+      facotry = @use.reduce(nil) {|fact, lib| fact || lib.factories[name] }
+
+      @factories[name] = factory || Factory.new(self, name)
     end
 
     def to_h
