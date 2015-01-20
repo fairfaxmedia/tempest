@@ -1,3 +1,5 @@
+require 'json'
+
 module Tempest
   class Template
     include Tempest
@@ -97,6 +99,16 @@ module Tempest
         end
         hash['Resources'] = resources
       end
+    end
+
+    def to_s
+      JSON.generate(
+        self.to_h,
+        :indent    => '  ',
+        :space     => ' ',
+        :object_nl => "\n",
+        :array_nl  => "\n",
+      )
     end
 
     def aws_region
