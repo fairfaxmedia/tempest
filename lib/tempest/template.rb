@@ -8,45 +8,35 @@ module Tempest
     attr_reader :mappings
     attr_reader :resources
     attr_reader :conditions
+    attr_reader :factories
 
     def initialize(&block)
-      @use         = []
+      @libs        = []
       @resources   = {}
       @parameters  = {}
       @conditions  = {}
       @mappings    = {}
-      @helpers     = {}
-      @ids         = {}
       @factories   = {}
 
       instance_eval(&block) if block_given?
     end
 
-    def use(template)
-      @use.push(template)
+    def use(lib)
+      @libs.push(lib)
+    end
+
+    def library(name)
+      Library.catalog(name)
     end
 
     def description(desc)
       @description = desc
     end
 
-    def [](id)
-      res = @resources[id]
-      par = @parameters[id]
-      map = @parameters[id]
-
-      found = [res, par, map].reject(&:nil?)
-      if found.size > 1
-        raise
-      else
-        found.first
-      end
-    end
-
     def resource(name)
       return @resources[name] if resources.include? name
 
-      resource = @use.reduce(nil) {|res, lib| res || lib.parameters[name] }
+      resource = @libs.reduce(nil) {|res, lib| res || lib.parameters[name] }
 
       @resources[name] = resource || Resource::Ref.new(self, name)
     end
@@ -54,7 +44,7 @@ module Tempest
     def parameter(name)
       return @parameters[name] if @parameters.include? name
 
-      parameter = @use.reduce(nil) {|param, lib| param || lib.parameters[name] }
+      parameter = @libs.reduce(nil) {|param, lib| param || lib.parameters[name] }
 
       @parameters[name] = parameter || Parameter::Ref.new(self, name)
     end
@@ -67,7 +57,7 @@ module Tempest
     def mapping(name)
       return @mappings[name] if @mappings.include? name
 
-      mapping = @use.reduce(nil) {|map, lib| map || lib.mappings[name] }
+      mapping = @libs.reduce(nil) {|map, lib| map || lib.mappings[name] }
 
       @mappings[name] = mapping || Mapping::Ref.new(self, name)
     end
@@ -75,7 +65,7 @@ module Tempest
     def condition(name)
       return @conditions[name] if @conditions.include? name
 
-      condition = @use.reduce(nil) {|cond, lib| cond || lib.conditions[name] }
+      condition = @libs.reduce(nil) {|cond, lib| cond || lib.conditions[name] }
 
       @conditions[name] = condition || Condition::Ref.new(self, name)
     end
@@ -83,7 +73,7 @@ module Tempest
     def factory(name)
       return @factories[name] if @factories.include? name
 
-      facotry = @use.reduce(nil) {|fact, lib| fact || lib.factories[name] }
+      factory = @libs.reduce(nil) {|fact, lib| fact || lib.factories[name] }
 
       @factories[name] = factory || Factory.new(self, name)
     end
@@ -134,10 +124,6 @@ module Tempest
 
     def fn_if(cond, t, f)
       Function.new('Fn::If', cond, t, f)
-    end
-
-    def default(value)
-      DefaultParameter.new(self, value)
     end
 
     def self.fmt_name(name)

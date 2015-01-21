@@ -104,7 +104,7 @@ module Tempest
 
     def compile
       Hash.new.tap do |hash|
-        hash['Type'] = @tmpl.fmt_name(@type)
+        hash['Type'] = Tempest::Util.mk_id(@type)
         @opts.each do |key, val|
           hash[Util.mk_id(key)] = val
         end
