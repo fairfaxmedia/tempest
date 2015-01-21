@@ -12,9 +12,7 @@ Tempest is a ruby library and DSL for generating AWS CloudFormation templates.
 
 ## TODO
 
-* Define/include libraries of definitions that can be referenced from multiple
-  templates.
-* CLI tool to generate templates to a file.
+* CLI tool to generate templates to a file or S3 object
 * Schemas? Ensure resources have the correct parameters (or just rely on AWS
   validation?)
 
@@ -22,9 +20,7 @@ Tempest is a ruby library and DSL for generating AWS CloudFormation templates.
 
 The ruby version:
 
-    Tempest::Template.new do
-      description 'Example template'
-
+    Tempest::Library.add(:example) do
       # We define a parameter here. We will use this definition as a template
       # for other parameters, but since this parameter is not referenced
       # directly it won't be included in the output.
@@ -38,6 +34,12 @@ The ruby version:
           "m3.2xlarge"
         ]
       )
+    end
+
+    Tempest::Template.new do
+      use library(:example)
+
+      description 'Example template'
 
       servers = {
         :web_server  => 'ami-123456',
