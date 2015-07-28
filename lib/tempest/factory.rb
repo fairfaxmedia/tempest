@@ -29,6 +29,10 @@ module Tempest
       @name     = name
     end
 
+    def reparent(template)
+      @template = template
+    end
+
     # This is just for compatibility/consistency with how other elements are
     # created/declared
     def create(args = {}, &block)
