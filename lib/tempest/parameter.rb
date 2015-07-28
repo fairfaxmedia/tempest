@@ -78,7 +78,7 @@ module Tempest
       end
 
       def duplicate_definition
-        Tempest::DuplicateDefinition.new("Parameter #{name} has already been created")
+        Tempest::DuplicateDefinition.new("Parameter #{@name} has already been created")
       end
     end
 
