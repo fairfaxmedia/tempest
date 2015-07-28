@@ -50,7 +50,7 @@ module Tempest
     end
 
     def fragment_ref
-      raise "Cannot reference condition directly. Use #if"
+      raise Tempest::Error.new("Cannot reference condition directly. Use #if")
     end
 
     def if(t, f)
