@@ -12,9 +12,9 @@ module Tempest
     def self.compile(value)
       case value
       when Hash
-        compile_hash(value)
+        compile_hash(value, method(__method__))
       when Array
-        compile_array(value)
+        compile_array(value, method(__method__))
       when Symbol
         mk_id(value)
       else
@@ -26,17 +26,34 @@ module Tempest
       end
     end
 
-    private
-
-    def self.compile_array(ary)
-      ary.map {|value| compile(value) }
+    def self.compile_declaration(value)
+      case value
+      when Hash
+        compile_hash(value, method(__method__))
+      when Array
+        compile_array(value, method(__method__))
+      when Symbol
+        mk_id(value)
+      else
+        if value.respond_to? :fragment_declare
+          value.fragment_declare
+        else
+          value
+        end
+      end
     end
 
-    def self.compile_hash(hash)
+    private
+
+    def self.compile_array(ary, continuation)
+      ary.map {|value| continuation[value] }
+    end
+
+    def self.compile_hash(hash, continuation)
       new_hash = Hash.new
       hash.each do |key, value|
-        new_key = @tmpl.fmt_name(key)
-        new_value = compile(value)
+        new_key = mk_id(key)
+        new_value = continuation[value]
         new_hash[new_key] = new_value
       end
       new_hash

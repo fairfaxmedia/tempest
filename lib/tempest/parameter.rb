@@ -10,6 +10,10 @@ module Tempest
         @referenced = false
       end
 
+      def reparent(template)
+        @template = template
+      end
+
       def referenced?
         @referenced
       end
