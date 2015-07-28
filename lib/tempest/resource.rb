@@ -10,6 +10,8 @@ module Tempest
       end
 
       def create(type, properties)
+        raise duplicate_definition unless @ref.nil?
+
         @ref = Tempest::Resource.new(@template, @name, type)
         @ref.properties(properties)
         self
@@ -36,6 +38,10 @@ module Tempest
 
       def ref_missing
         Tempest::ReferenceMissing.new("Resource #{@name} has not been initialized")
+      end
+
+      def duplicate_definition
+        Tempest::DuplicateDefinition.new("Parameter #{@name} has already been created")
       end
     end
 

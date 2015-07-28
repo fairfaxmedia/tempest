@@ -4,12 +4,19 @@ module Tempest
       attr_reader :ref
 
       def initialize(template, name)
-        @template = template
-        @name     = name
-        @ref      = nil
+        @template   = template
+        @name       = name
+        @ref        = nil
+        @referenced = true
+      end
+
+      def referenced?
+        @referenced
       end
 
       def create(body)
+        raise duplicate_definition unless @ref.nil?
+
         @ref = Tempest::Mapping.new(@template, @name, body)
       end
 
@@ -25,6 +32,7 @@ module Tempest
       alias :fragment_declare :compile_ref
 
       def find(*path)
+        @referenced = true
         # This won't validate that the mapping is initialized, but in theory
         # the template should call #compile_ref which will catch the error
         Function.new('Fn::FindInMap', @name, *path)
@@ -34,6 +42,10 @@ module Tempest
 
       def ref_missing
         Tempest::ReferenceMissing.new("Mapping #{@name} has not been initialized")
+      end
+
+      def duplicate_definition
+        Tempest::DuplicateDefinition.new("Parameter #{@name} has already been created")
       end
     end
 

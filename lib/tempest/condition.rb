@@ -4,9 +4,14 @@ module Tempest
       attr_reader :ref
 
       def initialize(template, name)
-        @template = template
-        @name     = name
-        @ref      = nil
+        @template   = template
+        @name       = name
+        @ref        = nil
+        @referenced = false
+      end
+
+      def referenced?
+        @referenced
       end
 
       def create(body)
@@ -29,6 +34,7 @@ module Tempest
       alias :fragment_declare :compile_ref
 
       def if(t, f)
+        @referenced = true
         Function.new('Fn::If', @name, t, f)
       end
 

@@ -99,18 +99,14 @@ module Tempest
           resources[fmt_name(name)] = res.fragment_declare
         end
 
-        unless @conditions.empty?
-          hash['Conditions'] = Util.compile_declaration(@conditions)
-        end
+        conds = @conditions.select {|k,v| v.referenced? }
+        hash['Conditions'] = Util.compile_declaration(conds) unless conds.empty?
 
-        unless @mappings.empty?
-          hash['Mappings'] = Util.compile_declaration(@mappings)
-        end
+        maps = @mappings.select {|k,v| v.referenced? }
+        hash['Mappings'] = Util.compile_declaration(maps) unless maps.empty?
 
-        ref_params = @parameters.select {|k,v| v.referenced? }
-        unless ref_params.empty?
-          hash['Parameters'] = Util.compile_declaration(ref_params)
-        end
+        params = @parameters.select {|k,v| v.referenced? }
+        hash['Parameters'] = Util.compile_declaration(params) unless params.empty?
 
         hash['Resources'] = resources
       end
