@@ -24,6 +24,7 @@ module Tempest
 
       def compile_ref
         raise ref_missing if @ref.nil?
+        @ref.fragment_declare
       end
       alias :fragment_declare :compile_ref
 
@@ -45,7 +46,7 @@ module Tempest
     end
 
     def fragment_declare
-      @body[:mapping]
+      Tempest::Util.compile(@body)
     end
 
     def fragment_ref
