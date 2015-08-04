@@ -2,6 +2,7 @@ module Tempest
   class Mapping
     class Ref
       attr_reader :ref
+      attr_reader :created_file, :created_line
 
       def initialize(template, name)
         @template   = template
@@ -10,12 +11,20 @@ module Tempest
         @referenced = true
       end
 
+      def reparent(template)
+        @template = template
+      end
+
       def referenced?
         @referenced
       end
 
       def create(body)
         raise duplicate_definition unless @ref.nil?
+
+        file, line, _ = caller.first.split(':')
+        @created_file = file
+        @created_line = line
 
         @ref = Tempest::Mapping.new(@template, @name, body)
       end
@@ -45,7 +54,7 @@ module Tempest
       end
 
       def duplicate_definition
-        Tempest::DuplicateDefinition.new("Parameter #{@name} has already been created")
+        Tempest::DuplicateDefinition.new("Mapping #{@name} already created in #{@created_file} line #{@created_line}")
       end
     end
 

@@ -2,6 +2,7 @@ module Tempest
   class Parameter
     class Ref
       attr_reader :ref
+      attr_reader :created_file, :created_line
 
       def initialize(template, name)
         @template   = template
@@ -61,6 +62,10 @@ module Tempest
       def create(type, opts = {})
         raise duplicate_definition unless @ref.nil?
 
+        file, line, _ = caller.first.split(':')
+        @created_file = file
+        @created_line = line
+
         @ref = Tempest::Parameter.new(@template, @name, type, opts)
         self
       end
@@ -82,7 +87,7 @@ module Tempest
       end
 
       def duplicate_definition
-        Tempest::DuplicateDefinition.new("Parameter #{@name} has already been created")
+        Tempest::DuplicateDefinition.new("Parameter #{@name} already been created in #{@created_file} line #{@created_line}")
       end
     end
 
@@ -110,7 +115,7 @@ module Tempest
       Hash.new.tap do |hash|
         hash['Type'] = Tempest::Util.mk_id(@type)
         @opts.each do |key, val|
-          hash[Util.mk_id(key)] = val
+          hash[Util.mk_id(key)] = Tempest::Util.compile(val)
         end
       end
     end
