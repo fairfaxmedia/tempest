@@ -71,7 +71,7 @@ module Tempest
     alias :fragment_declare :compile
 
     def fragment_ref
-      { 'Ref' => @tmpl.fmt_name(@name) }
+      { 'Ref' => Util.mk_id(@name) }
     end
 
     def property(path, target)
@@ -114,7 +114,7 @@ module Tempest
       when Array
         convert_array(value)
       when Symbol
-        @tmpl.fmt_name(value)
+        Util.mk_id(value)
       else
         if value.respond_to? :fragment_ref
           value.fragment_ref
@@ -131,7 +131,7 @@ module Tempest
     def convert_hash(hash)
       new_hash = Hash.new
       hash.each do |key, value|
-        new_key = @tmpl.fmt_name(key)
+        new_key = Util.mk_id(key)
         new_value = convert(value, key)
         new_hash[new_key] = new_value
       end

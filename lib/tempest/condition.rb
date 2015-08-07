@@ -35,7 +35,7 @@ module Tempest
 
       def if(t, f)
         @referenced = true
-        Function.new('Fn::If', @name, t, f)
+        Function::If.call(@name, t, f)
       end
 
       private
@@ -60,7 +60,7 @@ module Tempest
     end
 
     def if(t, f)
-      Function.new('Fn::If', @name, t ,f)
+      Function::If.call(@name, t, f)
     end
   end
 end

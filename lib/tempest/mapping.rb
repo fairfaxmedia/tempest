@@ -40,11 +40,15 @@ module Tempest
       end
       alias :fragment_declare :compile_ref
 
-      def find(*path)
+      def view(x)
+        Tempest::Mapping::View.new(self, x)
+      end
+
+      def find(x, y)
         @referenced = true
         # This won't validate that the mapping is initialized, but in theory
         # the template should call #compile_ref which will catch the error
-        Function.new('Fn::FindInMap', @name, *path)
+        Function::FindInMap.call(@name, x, y)
       end
 
       private
@@ -58,22 +62,54 @@ module Tempest
       end
     end
 
+    def View
+      def initialize(map, x)
+        @map = map
+        @x    = x
+      end
+
+      def find(y)
+        @map.find(@x, y)
+      end
+    end
+
     def initialize(tmpl, name, body)
       @tmpl = tmpl
       @name = name
-      @body = body
+      depth_min, depth_max = hash_depth(body)
+      if depth_min != 2 || depth_max != 2
+        raise "#{name}: All Mapping branches must be 2 levels deep"
+      end
+      @body  = body
     end
 
     def fragment_declare
-      @body
+      Tempest::Util.compile(@body)
     end
 
     def fragment_ref
       raise "Cannot reference mapping directly. Use #find"
     end
 
-    def find(*path)
-      Function.new('Fn::FindInMap', @name, *path)
+    def find(x, y)
+      Function::FindInMap.call(@name, x, y)
+    end
+
+    private
+
+    def hash_depth(hash)
+      min = 0
+      max = 0
+
+      hash.values.each do |v|
+        if v.is_a? Hash
+          v_min, v_max = hash_depth(v)
+          min = v_min if v_min < min || min == 0
+          max = v_max if v_min > max
+        end
+      end
+
+      return min+1, max+1
     end
   end
 end

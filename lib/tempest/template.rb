@@ -96,7 +96,7 @@ module Tempest
 
         resources = {}
         @resources.each do |name, res|
-          resources[fmt_name(name)] = res.fragment_declare
+          resources[Util.mk_id(name)] = res.fragment_declare
         end
 
         conds = @conditions.select {|k,v| v.referenced? }
@@ -122,48 +122,38 @@ module Tempest
       )
     end
 
-    def aws_region
-      @aws_region ||= Builtin.new('AWS::Region')
+    def builtin(id)
+      case id
+      when :account_id
+        @account_id ||= Builtin.new('AWS::AccountId')
+      when :notification_arns
+        @notif_arns ||= Builtin.new('AWS::NotificationARNs')
+      when :region
+        @region ||= Builtin.new('AWS::Region')
+      when :no_value
+        @no_value ||= Builtin.new('AWS::NoValue')
+      when :stack_id
+        @stack_id ||= Builtin.new('AWS::StackId')
+      when :stack_name
+        @stack_name ||= Builtin.new('AWS::StackName')
+      else
+        raise "Invalid builtin #{id.inspect}"
+      end
     end
 
-    def no_value
-      @no_value ||= Builtin.new('AWS::NoValue')
-    end
-
-    def cfn_id
-      @cfn_id ||= Builtin.new('ID')
-    end
-
-    def cfn_stack_id
-      @cfn_stack_id ||= Builtin.new('AWS::StackId')
-    end
-
-    def cfn_stack_name
-      @cfn_stack_name ||= Builtin.new('AWS::StackName')
-    end
-
-    def join(sep, *args)
-      Function.new('Fn::Join', sep, args)
-    end
-
-    def base64(data)
-      Function.new('Fn::Join', data)
-    end
-
-    def fn_if(cond, t, f)
-      Function.new('Fn::If', cond, t, f)
-    end
-
-    def fn_equals(x, y)
-      Function.new('Fn::Equals', x, y)
-    end
-
-    def self.fmt_name(name)
-      Util.mk_id(name)
-    end
-
-    def fmt_name(name)
-      Util.mk_id(name)
+    def function(id)
+      case id
+      when :base64
+        Function::Base64
+      when :join
+        Function::Join
+      when :if
+        Function::If
+      when :equals
+        Function::Equals
+      else
+        raise "Invalid function #{id.inspect}"
+      end
     end
   end
 end

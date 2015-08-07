@@ -124,10 +124,5 @@ module Tempest
     def fragment_ref
       { 'Ref' => @tmpl.fmt_name(@name) }
     end
-
-    def mk_eq_default
-      raise unless @opts.include? :default
-      Function.new('Fn::Equals', fragment_ref, @opts[:default])
-    end
   end
 end
