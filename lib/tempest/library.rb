@@ -7,10 +7,9 @@ module Tempest
       @catalog.fetch(name)
     end
 
-    def self.add(name, &block)
+    def self.add(name, lib)
       @catalog ||= {}
-      @catalog[name] ||= Library.new(name)
-      @catalog[name].instance_eval(&block)
+      @catalog[name] ||= lib
     end
 
     attr_reader :name
@@ -20,7 +19,7 @@ module Tempest
     attr_reader :conditions
     attr_reader :factories
 
-    def initialize(name)
+    def initialize(name, &block)
       @name        = name
       @resources   = {}
       @parameters  = {}
@@ -28,6 +27,10 @@ module Tempest
       @mappings    = {}
       @factories   = {}
       @libraries   = []
+
+      instance_eval(&block) if block_given?
+
+      Tempest::Library.add(name, self)
     end
 
     def use(lib)
@@ -38,8 +41,22 @@ module Tempest
       Library.catalog(name)
     end
 
+    def has_resource?(name)
+      return true if @resources.include? name
+
+      @libraries.any? {|lib| lib.has_resource?(name) }
+    end
+
     def resource(name)
-      @resources[name] ||= Resource::Ref.new(self, name)
+      return @resources[name] if @resources.include? name
+
+      lib = @libraries.find {|lib| lib.has_resource?(name) }
+
+      if lib.nil?
+        @resources[name] = Resource::Ref.new(self, name)
+      else
+        @resources[name] = lib.resource(name)
+      end
     end
 
     def has_parameter?(name)
@@ -83,12 +100,40 @@ module Tempest
       end
     end
 
+    def has_condition?(name)
+      return true if @conditions.include? name
+
+      @libraries.any? {|lib| lib.has_condition?(name) }
+    end
+
     def condition(name)
-      @conditions[name] ||= Condition::Ref.new(self, name)
+      return @conditions[name] if @conditions.include? name
+
+      lib = @libraries.find {|lib| lib.has_condition?(name) }
+
+      if lib.nil?
+        @conditions[name] = Condition::Ref.new(self, name)
+      else
+        @conditions[name] = lib.condition(name)
+      end
+    end
+
+    def has_factory?(name)
+      return true if @factories.include? name
+
+      @libraries.any? {|lib| lib.has_factory?(name) }
     end
 
     def factory(name)
-      @factories[name] ||= Factory.new(self, name)
+      return @factories[name] if @factories.include? name
+
+      lib = @libraries.find {|lib| lib.has_factory?(name) }
+
+      if lib.nil?
+        @factories[name] = Factory::Ref.new(self, name)
+      else
+        @factories[name] = lib.factory(name)
+      end
     end
 
     def builtin(id)
@@ -124,14 +169,5 @@ module Tempest
         raise "Invalid function #{id.inspect}"
       end
     end
-  end
-
-  def Library(name, &block)
-    @libraries ||= {}
-    @libraries[name] ||= Tempest::Library.new
-    if block_given?
-      @libraries[name].instance_eval(block)
-    end
-    @libraries[name]
   end
 end
