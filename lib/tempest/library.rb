@@ -9,30 +9,57 @@ module Tempest
 
     def self.add(name, &block)
       @catalog ||= {}
-      @catalog[name] ||= Library.new
+      @catalog[name] ||= Library.new(name)
       @catalog[name].instance_eval(&block)
     end
 
+    attr_reader :name
     attr_reader :parameters
     attr_reader :mappings
     attr_reader :resources
     attr_reader :conditions
     attr_reader :factories
 
-    def initialize
+    def initialize(name)
+      @name        = name
       @resources   = {}
       @parameters  = {}
       @conditions  = {}
       @mappings    = {}
       @factories   = {}
+      @libraries   = []
+    end
+
+    def use(lib)
+      @libraries.push(lib)
+    end
+
+    def library(name)
+      Library.catalog(name)
     end
 
     def resource(name)
       @resources[name] ||= Resource::Ref.new(self, name)
     end
 
+    def has_parameter?(name)
+      return true if @parameters.include? name
+
+      @libraries.any? {|lib| lib.has_parameter?(name) }
+    end
+
     def parameter(name)
-      @parameters[name] ||= Parameter::Ref.new(self, name)
+      return @parameters[name] if @parameters.include? name
+
+      lib = @libraries.find {|lib| lib.has_parameter?(name) }
+
+      if lib.nil?
+        @parameters[name] = Parameter::Ref.new(self, name)
+      else
+        @parameters[name] = lib.parameter(name)
+      end
+
+      @parameters[name]
     end
 
     def inherit_parameter(name, parent)

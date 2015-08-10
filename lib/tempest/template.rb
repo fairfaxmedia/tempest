@@ -44,12 +44,17 @@ module Tempest
     def parameter(name)
       return @parameters[name] if @parameters.include? name
 
-      parameter = @libs.reduce(nil) {|param, lib| param || lib.parameters[name] }
-      unless parameter.nil?
-        parameter = parameter.dup.tap {|p| p.reparent(self) }
+      lib = @libs.find {|lib| lib.has_parameter?(name) }
+
+      if lib.nil?
+        $stderr.puts "New parameter: #{name}"
+        @parameters[name] = Parameter::Ref.new(self, name)
+      else
+        $stderr.puts "Loaded parameter #{name} from #{lib.name}"
+        @parameters[name] = lib.parameter(name)
       end
 
-      @parameters[name] = parameter || Parameter::Ref.new(self, name)
+      @parameters[name]
     end
 
     def inherit_parameter(name, parent)
