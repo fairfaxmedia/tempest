@@ -47,10 +47,8 @@ module Tempest
       lib = @libs.find {|lib| lib.has_parameter?(name) }
 
       if lib.nil?
-        $stderr.puts "New parameter: #{name}"
         @parameters[name] = Parameter::Ref.new(self, name)
       else
-        $stderr.puts "Loaded parameter #{name} from #{lib.name}"
         @parameters[name] = lib.parameter(name)
       end
 
@@ -68,10 +66,8 @@ module Tempest
       lib = @libs.find {|lib| lib.has_mapping?(name) }
 
       if lib.nil?
-        $stderr.puts "New mapping: #{name}"
         @mappings[name] = Mapping::Ref.new(self, name)
       else
-        $stderr.puts "Loaded mapping #{name} from #{lib.name}"
         @mappings[name] = lib.mapping(name)
       end
 
