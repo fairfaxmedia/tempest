@@ -58,17 +58,29 @@ module Tempest
       else
         @parameters[name] = lib.parameter(name)
       end
-
-      @parameters[name]
     end
 
     def inherit_parameter(name, parent)
-      raise KeyError if @parameters.include? name
+      raise KeyError.new("Cannot create duplicate parameter #{name}") if @parameters.include? name
       @parameters[name] = Parameter::ChildRef.new(self, name, parent)
     end
 
+    def has_mapping?(name)
+      return true if @mappings.include? name
+
+      @libraries.any? {|lib| lib.has_mapping?(name) }
+    end
+
     def mapping(name)
-      @mappings[name] ||= Mapping::Ref.new(self, name)
+      return @mappings[name] if @mappings.include? name
+
+      lib = @libraries.find {|lib| lib.has_mapping?(name) }
+
+      if lib.nil?
+        @mappings[name] = Mapping::Ref.new(self, name)
+      else
+        @mappings[name] = lib.mapping(name)
+      end
     end
 
     def condition(name)

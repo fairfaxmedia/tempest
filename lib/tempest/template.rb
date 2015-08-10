@@ -65,12 +65,17 @@ module Tempest
     def mapping(name)
       return @mappings[name] if @mappings.include? name
 
-      mapping = @libs.reduce(nil) {|map, lib| map || lib.mappings[name] }
-      unless mapping.nil?
-        mapping = mapping.dup.tap {|m| m.reparent(self) }
+      lib = @libs.find {|lib| lib.has_mapping?(name) }
+
+      if lib.nil?
+        $stderr.puts "New mapping: #{name}"
+        @mappings[name] = Mapping::Ref.new(self, name)
+      else
+        $stderr.puts "Loaded mapping #{name} from #{lib.name}"
+        @mappings[name] = lib.mapping(name)
       end
 
-      @mappings[name] = mapping || Mapping::Ref.new(self, name)
+      @mappings[name]
     end
 
     def condition(name)
