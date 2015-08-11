@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |spec|
   spec.name        = 'tempest'
-  spec.version     = '0.0.1'
+  spec.version     = '0.0.2'
   spec.platform    = Gem::Platform::RUBY
   spec.authors     = ['David Baggerman']
   spec.email       = ['david.baggerman@fairfaxmedia.com.au']
