@@ -10,7 +10,7 @@ module Tempest
 
     def self.catalog(name)
       @catalog ||= {}
-      @catalog.fetch(name)
+      @catalog.fetch(name).tap(&:run!)
     end
 
     def self.add(name, lib)
@@ -34,9 +34,15 @@ module Tempest
       @factories   = {}
       @libraries   = []
 
-      instance_eval(&block) if block_given?
+      @block = block
 
       Tempest::Library.add(name, self)
+    end
+
+    def run!
+      return if @run
+      instance_eval(&@block)
+      @run = true
     end
 
     def use(lib)
