@@ -1,4 +1,5 @@
 require 'json'
+require 'tempest/library'
 
 module Tempest
   class Template < Tempest::Library
