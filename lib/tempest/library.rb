@@ -121,6 +121,8 @@ module Tempest
         Function::If
       when :equals
         Function::Equals
+      when :get_azs
+        Function::GetAZs
       else
         raise "Invalid function #{id.inspect}"
       end
