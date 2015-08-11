@@ -10,6 +10,5 @@ module Tempest
   require 'tempest/resource'
   require 'tempest/intrinsic'
   require 'tempest/function'
-
   require 'tempest/factory'
 end
