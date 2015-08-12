@@ -45,9 +45,6 @@ module Tempest
       end
     end
 
-    require 'tempest/resource/output'
-    require 'tempest/resource/substack'
-
     attr_accessor :name, :type, :tmpl
 
     def initialize(tmpl, name, type)
