@@ -7,11 +7,14 @@ module Tempest
 
     def initialize(&block)
       @libraries   = []
-      @resources   = {}
-      @parameters  = {}
+      @helpers     = {}
+
       @conditions  = {}
-      @mappings    = {}
       @factories   = {}
+      @mappings    = {}
+      @outputs     = {}
+      @parameters  = {}
+      @resources   = {}
 
       instance_eval(&block) if block_given?
     end
@@ -29,7 +32,7 @@ module Tempest
           resources[Util.mk_id(name)] = res.fragment_declare
         end
 
-        output = {}
+        outputs = {}
         @outputs.each do |name, out|
           outputs[Util.mk_id(name)] = out.compile
         end
@@ -40,7 +43,7 @@ module Tempest
         maps = @mappings.select {|k,v| v.referenced? }
         hash['Mappings'] = Util.compile_declaration(maps) unless maps.empty?
 
-        hash['Outputs'] = outputs unless @outputs.empty?
+        hash['Outputs'] = outputs unless outputs.empty?
 
         params = @parameters.select {|k,v| v.referenced? }
         hash['Parameters'] = Util.compile_declaration(params) unless params.empty?

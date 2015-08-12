@@ -28,12 +28,15 @@ module Tempest
 
     def initialize(name, &block)
       @name        = name
-      @resources   = {}
-      @parameters  = {}
-      @conditions  = {}
-      @mappings    = {}
-      @factories   = {}
       @libraries   = []
+      @helpers     = {}
+
+      @conditions  = {}
+      @factories   = {}
+      @mappings    = {}
+      @outputs     = {}
+      @parameters  = {}
+      @resources   = {}
 
       @block = block
 
@@ -101,6 +104,37 @@ module Tempest
         raise DuplicateDefinition.new("Parameter #{name} already created at #{prev_file} line #{prev_line}")
       end
       @parameters[name] = Parameter::ChildRef.new(self, name, parent)
+    end
+
+    def has_helper?(name)
+      return true if @helpers.include?(name)
+
+      @libraries.any? {|lib| lib.has_helper?(name) }
+    end
+
+    def helper(name, &block)
+      if block_given?
+        if @helpers.include?(name)
+          raise DuplicateDefinition.new("Helper #{name} already defined here")
+        end
+        @helpers[name] = block
+      else
+        return @helpers[name] if @helpers.include?(name)
+
+        lib = @libraries.find {|lib| lib.has_helper?(name) }
+        if lib.nil?
+          nil
+        else
+          lib.helper(name)
+        end
+      end
+    end
+
+    def method_missing(sym, *args)
+      if has_helper?(sym)
+        helper = helper(sym)
+        helper.call(*args)
+      end
     end
 
     # Various builtin values provided by cloudformation

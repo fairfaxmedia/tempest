@@ -9,11 +9,10 @@ module Tempest
         @ref      = nil
       end
 
-      def create(properties)
+      def create(value, properties = {})
         raise duplicate_definition unless @ref.nil?
 
-        @ref = Tempest::Output.new(@template, @name, type)
-        @ref.properties(properties)
+        @ref = Tempest::Output.new(@template, @name, value, properties)
         self
       end
 
@@ -47,9 +46,10 @@ module Tempest
 
     attr_accessor :name, :type, :tmpl
 
-    def initialize(tmpl, name, opts = {})
+    def initialize(tmpl, name, value, opts = {})
       @name       = name
       @tmpl       = tmpl
+      @value      = value
 
       @condition   = opts[:condition]   if opts.include? :condition
       @description = opts[:description] if opts.include? :description
@@ -61,7 +61,7 @@ module Tempest
       hash[:condition]   = @condition   if defined? @condition
       hash[:description] = @description if defined? @description
 
-      hash
+      Util.compile(hash)
     end
     alias :fragment_declare :compile
 
