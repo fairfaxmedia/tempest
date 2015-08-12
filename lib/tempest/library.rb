@@ -92,7 +92,12 @@ module Tempest
     #
     # TODO: Implement this for other types too.
     def inherit_parameter(name, parent)
-      raise KeyError.new("Cannot create duplicate parameter #{name}") if @parameters.include? name
+      if @parameters.include? name
+        prev = @parameters[name]
+        prev_file = prev.created_file
+        prev_line = prev.created_line
+        raise DuplicateDefinition.new("Parameter #{name} already created at #{prev_file} line #{prev_line}")
+      end
       @parameters[name] = Parameter::ChildRef.new(self, name, parent)
     end
 
@@ -112,7 +117,7 @@ module Tempest
       when :stack_name, 'StackName'
         @stack_name ||= Builtin.new('AWS::StackName')
       else
-        raise "Invalid builtin #{id.inspect}"
+        raise ReferenceMissing.new("Invalid builtin #{id.inspect}")
       end
     end
 
@@ -132,7 +137,7 @@ module Tempest
       when :get_azs
         Function::GetAZs
       else
-        raise "Invalid function #{id.inspect}"
+        raise ReferenceMissing.new("Invalid function #{id.inspect}")
       end
     end
   end
