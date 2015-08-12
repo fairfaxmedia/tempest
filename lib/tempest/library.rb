@@ -78,7 +78,9 @@ module Tempest
         if lib.nil?
           map[name] = klass::Ref.new(self, name)
         else
-          map[name] = lib.send(single, name)
+          item = lib.send(single, name).dup
+          item.reparent(self)
+          map[name] = item
         end
       end
     end
