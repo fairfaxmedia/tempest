@@ -29,11 +29,18 @@ module Tempest
           resources[Util.mk_id(name)] = res.fragment_declare
         end
 
+        output = {}
+        @outputs.each do |name, out|
+          outputs[Util.mk_id(name)] = out.compile
+        end
+
         conds = @conditions.select {|k,v| v.referenced? }
         hash['Conditions'] = Util.compile_declaration(conds) unless conds.empty?
 
         maps = @mappings.select {|k,v| v.referenced? }
         hash['Mappings'] = Util.compile_declaration(maps) unless maps.empty?
+
+        hash['Outputs'] = outputs unless @outputs.empty?
 
         params = @parameters.select {|k,v| v.referenced? }
         hash['Parameters'] = Util.compile_declaration(params) unless params.empty?

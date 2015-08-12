@@ -1,6 +1,7 @@
 require 'tempest/condition'
 require 'tempest/factory'
 require 'tempest/mapping'
+require 'tempest/output'
 require 'tempest/parameter'
 require 'tempest/resource'
 
@@ -57,6 +58,7 @@ module Tempest
       [:condition, :conditions, Tempest::Condition],
       [:factory,   :factories,  Tempest::Factory  ],
       [:mapping,   :mappings,   Tempest::Mapping  ],
+      [:output,    :outputs,    Tempest::Output   ],
       [:parameter, :parameters, Tempest::Parameter],
       [:resource,  :resources,  Tempest::Resource ],
     ]
