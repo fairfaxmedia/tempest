@@ -4,6 +4,7 @@ module Tempest
       include Tempest::BaseRef
       RefClass = Tempest::Mapping
       RefType  = "mapping"
+      RefKey   = "mappings"
 
       def compile_reference
         raise "Cannot reference a mapping directly, use the #find method"
@@ -27,16 +28,17 @@ module Tempest
       @body  = body
     end
 
-    def fragment_declare
+    def compile
       Tempest::Util.compile(@body)
     end
 
-    def fragment_ref
-      raise "Cannot reference mapping directly. Use #find"
-    end
-
-    def find(x, y)
-      Function::FindInMap.call(@name, x, y)
+    def update(opts)
+      body = @body.merge(opts)
+      depth_min, depth_max = hash_depth(body)
+      if depth_min != 2 || depth_max != 2
+        raise "#{name}: All Mapping branches must be 2 levels deep"
+      end
+      @body = body
     end
 
     private

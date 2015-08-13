@@ -3,45 +3,10 @@ module Tempest
     include Tempest
 
     class Ref
-      def initialize(template, name)
-        @template = template
-        @name     = name
-        @ref      = nil
-      end
-
-      def create(value, properties = {})
-        raise duplicate_definition unless @ref.nil?
-
-        @ref = Tempest::Output.new(@template, @name, value, properties)
-        self
-      end
-
-      def compile
-        raise ref_missing if @ref.nil?
-        @ref.compile
-      end
-      alias :fragment_ref :compile
-
-      def compile_ref
-        # FIXME
-        raise 'Cannot reference an output'
-      end
-      alias :fragment_declare :compile_ref
-
-      def att(*key)
-        key = key.map {|k| Util.mk_id(k) }.join('.')
-        Function.new('Fn::GetAtt', @name, key)
-      end
-
-      private
-
-      def ref_missing
-        Tempest::ReferenceMissing.new("Output #{@name} has not been initialized")
-      end
-
-      def duplicate_definition
-        Tempest::DuplicateDefinition.new("Output #{@name} has already been created")
-      end
+      include Tempest::BaseRef
+      RefClass = Tempest::Output
+      RefType  = "output"
+      RefKey   = "outputs"
     end
 
     attr_accessor :name, :type, :tmpl

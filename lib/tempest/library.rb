@@ -83,26 +83,10 @@ module Tempest
         if lib.nil?
           map[name] = klass::Ref.new(self, name)
         else
-          item = lib.send(single, name).dup
+          item = lib.send(single, name)
           map[name] = klass::Ref.new(self, name, item)
         end
       end
-    end
-
-    # It is possible to modify an inherited parameter.
-    # e.g. parameter(:basic_default).spawn(:specific_param, :default => "foo")
-    # will create a :specific_param parameter with a default value of "foo" and
-    # other settings inherited from the basic_default parameter
-    #
-    # TODO: Implement this for other types too.
-    def inherit_parameter(name, parent)
-      if @parameters.include? name
-        prev = @parameters[name]
-        prev_file = prev.created_file
-        prev_line = prev.created_line
-        raise DuplicateDefinition.new("Parameter #{name} already created at #{prev_file} line #{prev_line}")
-      end
-      @parameters[name] = Parameter::ChildRef.new(self, name, parent)
     end
 
     def has_helper?(name)
@@ -133,6 +117,8 @@ module Tempest
       if has_helper?(sym)
         helper = helper(sym)
         helper.call(*args)
+      else
+        super
       end
     end
 

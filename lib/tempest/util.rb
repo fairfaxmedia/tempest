@@ -18,8 +18,8 @@ module Tempest
       when Symbol
         mk_id(value)
       else
-        if value.respond_to? :fragment_ref
-          value.fragment_ref
+        if value.respond_to? :compile_reference
+          value.compile_reference
         else
           value
         end
@@ -35,8 +35,8 @@ module Tempest
       when Symbol
         mk_id(value)
       else
-        if value.respond_to? :fragment_declare
-          value.fragment_declare
+        if value.respond_to? :compile_declaration
+          value.compile_declaration
         else
           value
         end

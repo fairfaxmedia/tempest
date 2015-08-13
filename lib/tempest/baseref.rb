@@ -8,7 +8,7 @@ module Tempest
       @name       = name
       @ref        = nil
       @referenced = false
-      @parent     = nil
+      @parent     = parent
     end
 
     def referenced?
@@ -20,7 +20,7 @@ module Tempest
         raise DuplicateDefinition.new("Cannot create #{id} as a child of itself")
       end
 
-      self.class.new(@template, id, self)
+      @template.send(ref_key)[id] = self.class.new(@template, id, self)
     end
 
     def with_prefix(prefix, opts = {})
@@ -36,66 +36,88 @@ module Tempest
 
       @referenced = true
 
-      { 'Ref' => Util.mk_id(@ref.name) }
+      { 'Ref' => Util.mk_id(ref.name) }
     end
 
     def compile_definition
       raise ref_missing unless created?
 
-      @ref.compile
+      ref.compile
     end
+    alias :compile_declaration :compile_definition
 
     def type
       raise ref_missing unless created?
 
-      @ref.type
+      ref.type
     end
 
     def opts
       raise ref_missing unless created?
 
-      @ref.opts
+      ref.opts
     end
 
-    def create(type, opts = {})
+    def create(*args, &block)
       raise duplicate_definition unless @ref.nil?
 
       file, line, _ = caller.first.split(':')
       @created_file = file
       @created_line = line
 
-      @ref = RefClass.new(@template, @name, type, opts)
+      @ref = ref_class.new(@template, @name, *args, &block)
       self
     end
 
-    def update(opts = {})
+    def update(*args)
       if !@ref.nil?
         raise Tempest::DuplicateDefinition.new(
-          "#{RefType.capitalize} #{@name} already been created at #{@created_file}:#{@created_line} - updates can only applied during inheritance"
+          "#{type_name.capitalize} #{@name} already been created at #{@created_file}:#{@created_line} - updates can only applied during inheritance"
         )
       elsif @parent.nil?
-        raise TempestError.new("Cannot update #{RefType} without parent - updates can only be applied during inheritance")
+        raise TempestError.new("Cannot update #{type_name} without parent - updates can only be applied during inheritance")
       end
 
       file, line, _ = caller.first.split(':')
       @created_file = file
       @created_line = line
 
-      @ref = RefClass.new(@template, @name, @parent.type, @parent.opts.merge(opts)
+      @ref = ref.dup
+      @ref.update(*args)
+
+      self
     end
 
     def created?
-      @ref.nil? || (@parent && @parent.created?)
+      !ref.nil?
+    end
+
+    def ref
+      return @ref unless @ref.nil?
+
+      @parent.nil? ? nil : @parent.ref
     end
 
     private
 
+    def type_name
+      self.class.const_get(:RefType)
+    end
+
+    def ref_key
+      self.class.const_get(:RefKey)
+    end
+
+    def ref_class
+      self.class.const_get(:RefClass)
+    end
+
     def ref_missing
-      Tempest::ReferenceMissing.new("#{RefType.capitalize} #{@name} has not been initialized")
+      Tempest::ReferenceMissing.new("#{type_name.capitalize} #{@name} has not been initialized")
     end
 
     def duplicate_definition
-      Tempest::DuplicateDefinition.new("#{RefType.capitalize} #{@name} already been created at #{@created_file}:#{@created_line}")
+      Tempest::DuplicateDefinition.new("#{type_name.capitalize} #{@name} already been created at #{@created_file}:#{@created_line}")
     end
   end
 end

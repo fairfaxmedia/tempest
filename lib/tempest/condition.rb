@@ -1,47 +1,24 @@
 module Tempest
   class Condition
     class Ref
-      attr_reader :ref
+      include Tempest::BaseRef
+      RefClass = Tempest::Condition
+      RefType  = 'parameter'
+      RefKey   = 'parameters'
 
-      def initialize(template, name)
-        @template   = template
-        @name       = name
-        @ref        = nil
-        @referenced = false
-      end
-
-      def referenced?
-        @referenced
-      end
-
-      def create(body)
-        @ref = Tempest::Condition.new(@template, @name, body)
-      end
-
-      def created?
-        !@ref.nil?
-      end
-
-      def compile
+      def compile_reference
         raise Tempest::Error.new("Cannot reference a Condition directly. Use #if")
       end
-      alias :fragment_ref :compile
 
-      def compile_ref
+      def compile_definition
         raise ref_missing if @ref.nil?
         @ref.fragment_declare
       end
-      alias :fragment_declare :compile_ref
+      alias :compile_declaration :compile_definition
 
       def if(t, f)
         @referenced = true
         Function::If.call(@name, t, f)
-      end
-
-      private
-
-      def ref_missing
-        Tempest::ReferenceMissing.new("Condition #{@name} has not been initialized")
       end
     end
 

@@ -29,12 +29,12 @@ module Tempest
 
         resources = {}
         @resources.each do |name, res|
-          resources[Util.mk_id(name)] = res.fragment_declare
+          resources[Util.mk_id(name)] = res.compile_declaration
         end
 
         outputs = {}
         @outputs.each do |name, out|
-          outputs[Util.mk_id(name)] = out.compile
+          outputs[Util.mk_id(name)] = out.compile_declaration
         end
 
         conds = @conditions.select {|k,v| v.referenced? }

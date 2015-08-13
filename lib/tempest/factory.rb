@@ -3,6 +3,27 @@
 # me to use factory objects in a way that appears declarative.
 module Tempest
   class Factory
+    class Ref
+      include Tempest::BaseRef
+      RefClass = Tempest::Factory
+      RefType  = "factory"
+      RefKey   = "factories"
+
+      def construct(*args)
+        raise ref_missing unless created?
+
+        ref.construct(*args)
+      end
+
+      def compile_definition
+        raise "Cannot compile factories. Use #construct method"
+      end
+
+      def compile_reference
+        raise "Cannot reference factories. Use #construct method"
+      end
+    end
+
     class Construct
       def initialize(scope, args = {})
         @scope = scope
@@ -24,58 +45,11 @@ module Tempest
       end
     end
 
-    class Ref
-      def initialize(template, name)
-        @template = template
-        @name     = name
-      end
-
-      def reparent(template)
-        @template = template
-      end
-
-      def create(args = {}, &block)
-        raise duplicate_definition unless @ref.nil?
-
-        file, line, _ = caller.first.split(':')
-        @created_file = file
-        @created_line = line
-
-        @ref = Tempest::Factory.new(@template, @name, args, &block)
-        self
-      end
-
-      def construct(*args)
-        raise ref_missing if @ref.nil?
-
-        @ref.construct(*args)
-      end
-
-      private
-
-      def ref_missing
-        Tempest::ReferenceMissing.new("Factory #{@name} has not been initialized")
-      end
-
-      def duplicate_definition
-        Tempest::DuplicateDefinition.new("Factory #{@name} already been created in #{@created_file} line #{@created_line}")
-      end
-    end
-
     def initialize(template, name, args = {}, &block)
       @template = template
       @name     = name
       @args     = args.keys # FIXME - values should be used for validation (and autoref?)
       @block    = block
-    end
-
-    def reparent(template)
-      @template = template
-    end
-
-    # This is just for compatibility/consistency with how other elements are
-    # created/declared
-    def create(args = {}, &block)
     end
 
     def construct(*params)
