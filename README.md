@@ -4,17 +4,22 @@ Tempest is a ruby library and DSL for generating AWS CloudFormation templates.
 
 ## Features
 
-* Define parameters, mappings, etc by inheriting from other definitions.
-  Anything not referenced by a resource won't be included in the output.
+* Libraries allow creating a collection of reusable components, which can be
+  reused throughout many templates.
+* Components imported from a library can have selected parameters overwritten.
+  For example, you might change the default value for a parameter from what is
+  in the library.
+* Component inheritance also allows duplicating and/or renaming components
+* Automatically trims out parameters and mappings that aren't required. Your
+  entire library of parameters and mappings won't be included in every
+  template.
 * Validates references. Will fail to compile if a resource references a
-  parameter that doesn't exist, won't allow you to reference mappings directly,
-  etc.
+  parameter that doesn't exist, or is invalid.
+* Helper functions and factories can be used to simplify common patterns.
 
 ## TODO
 
 * CLI tool to generate templates to a file or S3 object
-* Schemas? Ensure resources have the correct parameters (or just rely on AWS
-  validation?)
 
 ## Example
 
@@ -34,6 +39,15 @@ The ruby version:
           "m3.2xlarge"
         ]
       )
+
+      factory(:server).create(:name => :string, :ami => :string) do
+        resource(name).create('AWS::EC2::Instance',
+          # parameter.with_prefix creates a new parameter such as
+          # web_server_instance_type, copying the options. You may also
+          # selectively overwrite specific options.
+          :instance_type => parameter(:instance_type).with_prefix(name)
+        )
+      end
     end
 
     Tempest::Template.new do
@@ -48,12 +62,7 @@ The ruby version:
       }
 
       servers.each do |name, ami|
-        resource(name).create('AWS::EC2::Instance',
-          # parameter.with_prefix creates a new parameter such as
-          # web_server_instance_type, copying the options. You may also
-          # selectively overwrite specific options.
-          :instance_type => parameter(:instance_type).with_prefix(name)
-        )
+        factory(:server).construct(name, ami)
       end
     end
 
