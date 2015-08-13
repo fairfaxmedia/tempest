@@ -35,6 +35,8 @@ module Tempest
       def method_missing(name, *args)
         if @scope.respond_to? name
           @scope.send(name, *args)
+        elsif @scope.has_helper?(name)
+          @scope.helper(name).call(*args)
         else
           super
         end
