@@ -4,14 +4,16 @@ module Tempest
       attr_reader :ref
       attr_reader :created_file, :created_line
 
-      def initialize(template, name)
+      def initialize(template, name, parent = nil)
         @template   = template
         @name       = name
         @ref        = nil
         @referenced = false
+        @parent     = nil
       end
 
       def reparent(template)
+        # TODO - Deprecated. Refs should refer to parent refs, not be duplicated/reparents
         @template = template
       end
 
@@ -19,42 +21,48 @@ module Tempest
         @referenced
       end
 
-      def spawn(id, opts = {})
-        @template.inherit_parameter(id, self).create(opts)
+      def child(id, opts = {})
+        if id == @name
+          raise DuplicateDefinition.new("Cannot create #{id} as a child of itself")
+        end
+
+        Parameter::Ref.new(@template, id, self)
       end
 
       def with_prefix(prefix, opts = {})
-        spawn(:"#{prefix}_#{@name}", opts)
+        child(:"#{prefix}_#{@name}", opts)
       end
 
       def with_suffix(suffix, opts = {})
-        spawn(:"#{@name}_#{suffix}", opts)
+        child(:"#{@name}_#{suffix}", opts)
       end
 
       def compile
-        raise ref_missing if @ref.nil?
+        raise ref_missing unless created?
 
         @referenced = true
 
         { 'Ref' => Util.mk_id(@ref.name) }
       end
       alias :fragment_ref :compile
+      alias :compile_reference :compile
 
       def compile_ref
-        raise ref_missing if @ref.nil?
+        raise ref_missing unless created?
 
         @ref.compile
       end
       alias :fragment_declare :compile_ref
+      alias :compile_declaration :compile_ref
 
       def type
-        raise ref_missing if @ref.nil?
+        raise ref_missing unless created?
 
         @ref.type
       end
 
       def opts
-        raise ref_missing if @ref.nil?
+        raise ref_missing unless created?
 
         @ref.opts
       end
@@ -70,14 +78,24 @@ module Tempest
         self
       end
 
-      def default?
-        cond = @template.condition(:"#{@name}_default")
-        cond.create(@ref.mk_eq_default) unless cond.created?
-        cond
+      def update(opts = {})
+        if !@ref.nil?
+          raise Tempest::DuplicateDefinition.new(
+            "Parameter #{@name} already been created at #{@created_file}:#{@created_line} - updates can only applied during inheritance"
+          )
+        elsif @parent.nil?
+          raise TempestError.new("Cannot update parameter without parent")
+        end
+
+        file, line, _ = caller.first.split(':')
+        @created_file = file
+        @created_line = line
+
+        @ref = Tempest::Parameter.new(@template, @name, @parent.type, @parent.opts.merge(opts)
       end
 
-      def if_default(t, f = self)
-        default?.if(t, f)
+      def created?
+        @ref.nil? || (@parent && @parent.created?)
       end
 
       private
@@ -92,13 +110,20 @@ module Tempest
     end
 
     class ChildRef < Ref
-      def initialize(template, name, parent)
-        @parent = parent
-        super(template, name)
-      end
-
       def create(opts = {})
         super(@parent.type, @parent.opts.merge(opts))
+      end
+
+      def compile_ref
+        create if @ref.nil? && created?
+
+        super
+      end
+
+      private
+
+      def created?
+        @ref.nil? || @parent.created?
       end
     end
 

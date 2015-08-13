@@ -84,8 +84,7 @@ module Tempest
           map[name] = klass::Ref.new(self, name)
         else
           item = lib.send(single, name).dup
-          item.reparent(self)
-          map[name] = item
+          map[name] = klass::Ref.new(self, name, item)
         end
       end
     end

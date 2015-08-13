@@ -2,6 +2,7 @@ module Tempest
   require 'tempest/errors'
   require 'tempest/util'
 
+  require 'tempest/baseref'
   require 'tempest/library'
   require 'tempest/template'
   require 'tempest/mapping'
