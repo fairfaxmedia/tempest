@@ -79,6 +79,8 @@ module Tempest
         map = instance_variable_get("@#{plural}")
         return map[name] if map.include?(name)
 
+        called_from = caller.first
+
         lib = instance_variable_get('@libraries').find {|lib| lib.send(:"has_#{single}?", name) }
         if lib.nil?
           map[name] = klass::Ref.new(self, name)
@@ -86,6 +88,8 @@ module Tempest
           item = lib.send(single, name)
           map[name] = klass::Ref.new(self, name, item)
         end
+
+        map[name].tap {|ref| ref.mark_used(called_from) }
       end
     end
 

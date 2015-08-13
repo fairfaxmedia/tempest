@@ -16,6 +16,10 @@ module Tempest
       end
       alias :compile_declaration :compile_definition
 
+      def equals(x, y)
+        create(Function::Equals.call(x, y))
+      end
+
       def if(t, f)
         @referenced = true
         Function::If.call(@name, t, f)

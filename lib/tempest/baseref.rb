@@ -9,6 +9,7 @@ module Tempest
       @ref        = nil
       @referenced = false
       @parent     = parent
+      @used_at    = []
     end
 
     def referenced?
@@ -59,9 +60,10 @@ module Tempest
     end
 
     def create(*args, &block)
-      raise duplicate_definition unless @ref.nil?
-
       file, line, _ = caller.first.split(':')
+
+      raise duplicate_definition(caller.first) unless @ref.nil?
+
       @created_file = file
       @created_line = line
 
@@ -98,6 +100,11 @@ module Tempest
       @parent.nil? ? nil : @parent.ref
     end
 
+    def mark_used(pos)
+      @used_at << pos.split(':').take(2).join(':')
+      nil
+    end
+
     private
 
     def type_name
@@ -113,11 +120,16 @@ module Tempest
     end
 
     def ref_missing
-      Tempest::ReferenceMissing.new("#{type_name.capitalize} #{@name} has not been initialized")
+      Tempest::ReferenceMissing.new("#{type_name.capitalize} #{@name} has not been initialized").tap do |err|
+        err.referenced_from = @used_at
+      end
     end
 
-    def duplicate_definition
-      Tempest::DuplicateDefinition.new("#{type_name.capitalize} #{@name} already been created at #{@created_file}:#{@created_line}")
+    def duplicate_definition(called_from)
+      Tempest::DuplicateDefinition.new("#{type_name.capitalize} #{@name} already been created").tap do |err|
+        err.declared   = "#{@created_file}:#{@created_line}"
+        err.redeclared = called_from
+      end
     end
   end
 end
