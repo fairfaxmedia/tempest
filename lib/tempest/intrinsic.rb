@@ -15,5 +15,10 @@ module Tempest
     def fragment_ref
       { 'Ref' => @target }
     end
+
+    def to_h
+      { 'Ref' => @target }
+    end
+    alias :tempest_h :to_h
   end
 end

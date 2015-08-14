@@ -10,12 +10,6 @@ module Tempest
         raise Tempest::Error.new("Cannot reference a Condition directly. Use #if")
       end
 
-      def compile_definition
-        raise ref_missing if @ref.nil?
-        @ref.compile_definition
-      end
-      alias :compile_declaration :compile_definition
-
       def equals(x, y)
         create(Function::Equals.call(x, y))
       end
@@ -36,6 +30,11 @@ module Tempest
       Tempest::Util.compile(@body)
     end
     alias :compile_declaration :compile_definition
+
+    def to_h
+      @body
+    end
+    alias :tempest_h :to_h
 
     def if(t, f)
       Function::If.call(@name, t, f)

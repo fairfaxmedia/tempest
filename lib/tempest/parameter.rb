@@ -26,6 +26,16 @@ module Tempest
     end
     alias :fragment_declare :compile
 
+    def to_h
+      Hash.new.tap do |hash|
+        hash['Type'] = @type
+        @opts.each do |key, val|
+          hash[key] = val
+        end
+      end
+    end
+    alias :tempest_h :to_h
+
     def update(opts)
       @opts = @opts.merge(opts)
     end

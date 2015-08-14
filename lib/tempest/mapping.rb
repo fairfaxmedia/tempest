@@ -11,9 +11,8 @@ module Tempest
       end
 
       def find(x, y)
+        # FIXME - This will lead to mappings seeming "referenced", even if the FindInMap result isn't used
         @referenced = true
-        # This won't validate that the mapping is initialized, but in theory
-        # the template should call #compile_ref which will catch the error
         Function::FindInMap.call(@name, x, y)
       end
     end
@@ -31,6 +30,11 @@ module Tempest
     def compile
       Tempest::Util.compile(@body)
     end
+
+    def to_h
+      @body
+    end
+    alias :tempest_h :to_h
 
     def update(opts)
       body = @body.merge(opts)

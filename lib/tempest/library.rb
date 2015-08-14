@@ -30,6 +30,7 @@ module Tempest
       @name        = name
       @libraries   = []
       @helpers     = {}
+      @settings    = {}
 
       @conditions  = {}
       @factories   = {}
@@ -57,6 +58,24 @@ module Tempest
       Library.catalog(name)
     end
 
+    def set(pairs)
+      pairs.each do |key, value|
+        @settings[key] = value
+      end
+    end
+
+    def setting(key)
+      Setting.new(key)
+    end
+
+    def settings
+      settings = {}
+      @libraries.each do |lib|
+        settings.merge!(lib.settings)
+      end
+      settings.merge!(@settings)
+    end
+
     keywords = [
       [:condition, :conditions, Tempest::Condition],
       [:factory,   :factories,  Tempest::Factory  ],
@@ -70,6 +89,7 @@ module Tempest
     # e.g. has_resource?(id) and resource(id)
     keywords.each do |single, plural, klass|
       define_method(:"has_#{single}?") do |name|
+        name = Util.key(name)
         return true if instance_variable_get("@#{plural}").include?(name)
 
         instance_variable_get('@libraries').any? {|lib| lib.send(:"has_#{single}?", name) }
@@ -77,6 +97,7 @@ module Tempest
 
       define_method(single) do |name|
         map = instance_variable_get("@#{plural}")
+        name = Util.key(name)
         return map[name] if map.include?(name)
 
         called_from = caller.first
@@ -91,6 +112,14 @@ module Tempest
 
         map[name].tap {|ref| ref.mark_used(called_from) }
       end
+    end
+
+    def all_parameters
+      _params = []
+      @libraries.each do |lib|
+        _params += lib.all_parameters
+      end
+      _params = (_params + @parameters.keys).uniq
     end
 
     def has_helper?(name)
@@ -128,6 +157,7 @@ module Tempest
 
     # Various builtin values provided by cloudformation
     def builtin(id)
+      from = caller.first
       case id
       when :account_id, 'AccountId'
         @account_id ||= Builtin.new('AWS::AccountId')
@@ -142,7 +172,9 @@ module Tempest
       when :stack_name, 'StackName'
         @stack_name ||= Builtin.new('AWS::StackName')
       else
-        raise ReferenceMissing.new("Invalid builtin #{id.inspect}")
+        err = ReferenceMissing.new("Invalid builtin #{id.inspect}")
+        err.referenced_from << from
+        raise err
       end
     end
 

@@ -1,4 +1,6 @@
 module Tempest
+  Setting = Struct.new(:key, :value)
+
   require 'tempest/errors'
   require 'tempest/util'
 

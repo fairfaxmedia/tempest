@@ -35,5 +35,13 @@ module Tempest
       end
       hash
     end
+
+    def to_h
+      hash = { 'Type' => @type }
+      hash['DependsOn' ] = @depends_on.uniq unless @depends_on.empty?
+      hash['Properties'] = @properties      unless @properties.empty?
+      hash
+    end
+    alias :tempest_h :to_h
   end
 end

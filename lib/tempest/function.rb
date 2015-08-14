@@ -6,7 +6,7 @@ module Tempest
 
     class Call
       def initialize(name, args)
-        @name = name
+        @name = Util.key(name)
         @args = args
       end
 
@@ -14,6 +14,11 @@ module Tempest
         { @name => Util.compile(@args) }
       end
       alias :compile_declaration :compile_reference
+
+      def to_h
+        { @name => @args }
+      end
+      alias :tempest_h :to_h
     end
 
     def initialize(name, arity)

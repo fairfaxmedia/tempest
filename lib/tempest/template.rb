@@ -8,6 +8,7 @@ module Tempest
     def initialize(&block)
       @libraries   = []
       @helpers     = {}
+      @settings    = {}
 
       @conditions  = {}
       @factories   = {}
@@ -24,31 +25,52 @@ module Tempest
     end
 
     def to_h
+      _settings = settings
+
       Hash.new.tap do |hash|
         hash['Description'] = @description unless @description.nil?
 
+        # Resources and outputs are compiled first, since these are always
+        # included. Anything that doesn't get referenced by a resource or
+        # output won't be included in the output template.
         resources = {}
         @resources.each do |name, res|
-          resources[Util.mk_id(name)] = res.compile_declaration
+          resources[name] = res.ref!
+        end
+        hash['Resources'] = Util.compile(resources, _settings)
+
+        unless @outputs.empty?
+          outs = {}
+          @outputs.each do |key, out|
+            outs[key] = out.ref! if out.referenced?
+          end
+          hash['Outputs'] = Util.compile(outs, _settings)
         end
 
-        outputs = {}
-        @outputs.each do |name, out|
-          outputs[Util.mk_id(name)] = out.compile_declaration
+        unless @conditions.empty?
+          conds = {}
+          @conditions.each do |key, cond|
+            conds[key] = cond.ref! if cond.referenced?
+          end
+          hash['Conditions'] = Util.compile(conds, _settings)
         end
 
-        conds = @conditions.select {|k,v| v.referenced? }
-        hash['Conditions'] = Util.compile_declaration(conds) unless conds.empty?
+        unless @mappings.empty?
+          mappings = {}
+          @mappings.each do |key, m|
+            mappings[key] = m.ref! if m.referenced?
+          end
+          hash['Mappings'] = Util.compile(mappings, _settings)
+        end
 
-        maps = @mappings.select {|k,v| v.referenced? }
-        hash['Mappings'] = Util.compile_declaration(maps) unless maps.empty?
-
-        hash['Outputs'] = outputs unless outputs.empty?
-
-        params = @parameters.select {|k,v| v.referenced? }
-        hash['Parameters'] = Util.compile_declaration(params) unless params.empty?
-
-        hash['Resources'] = resources
+        unless all_parameters.empty?
+          params = {}
+          all_parameters.each do |key|
+            p = parameter(key)
+            params[key] = p.ref! if p.referenced?
+          end
+          hash['Parameters'] = Util.compile(params, _settings)
+        end
       end
     end
 

@@ -6,9 +6,15 @@ module Tempest
   class DuplicateDefinition < Error
     attr_accessor :declared
     attr_accessor :redeclared
+
   end
 
   class ReferenceMissing < Error
     attr_accessor :referenced_from
+
+    def initialize(*args, &block)
+      @referenced_from = []
+      super
+    end
   end
 end

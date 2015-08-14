@@ -5,7 +5,7 @@ module Tempest
 
     def initialize(template, name, parent = nil)
       @template   = template
-      @name       = name
+      @name       = Util.key(name)
       @ref        = nil
       @referenced = false
       @parent     = parent
@@ -13,10 +13,11 @@ module Tempest
     end
 
     def referenced?
-      @referenced
+      @referenced || (@parent && @parent.referenced?)
     end
 
     def child(id, opts = {})
+      id = Util.key(id)
       if id == @name
         raise DuplicateDefinition.new("Cannot create #{id} as a child of itself")
       end
@@ -38,6 +39,17 @@ module Tempest
       @referenced = true
 
       { 'Ref' => Util.mk_id(ref.name) }
+    end
+
+    def to_h
+      raise ref_missing unless created?
+
+      { 'Ref' => @name }
+    end
+
+    def tempest_h
+      @referenced = true
+      to_h
     end
 
     def compile_definition
@@ -98,6 +110,12 @@ module Tempest
       return @ref unless @ref.nil?
 
       @parent.nil? ? nil : @parent.ref
+    end
+
+    def ref!
+      r = ref
+      raise ref_missing if r.nil?
+      r
     end
 
     def mark_used(pos)
