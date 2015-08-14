@@ -12,7 +12,7 @@ module Tempest
 
       def compile_definition
         raise ref_missing if @ref.nil?
-        @ref.fragment_declare
+        @ref.compile_definition
       end
       alias :compile_declaration :compile_definition
 
@@ -32,13 +32,10 @@ module Tempest
       @body = body
     end
 
-    def fragment_declare
+    def compile_definition
       Tempest::Util.compile(@body)
     end
-
-    def fragment_ref
-      raise Tempest::Error.new("Cannot reference condition directly. Use #if")
-    end
+    alias :compile_declaration :compile_definition
 
     def if(t, f)
       Function::If.call(@name, t, f)

@@ -10,13 +10,10 @@ module Tempest
         @args = args
       end
 
-      def to_s
-        JSON.generate(self.fragment_ref)
-      end
-
-      def fragment_ref
+      def compile_reference
         { @name => Util.compile(@args) }
       end
+      alias :compile_declaration :compile_reference
     end
 
     def initialize(name, arity)
