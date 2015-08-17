@@ -21,23 +21,27 @@ module Tempest
       end
     end
 
-    def wrap(parent)
-      @parent = parent
+    # Default values might be supplied to #initialize, we allow for these to be
+    # overwritten once.
+    def is_set?
+      @is_set
+    end
+
+    def set(value, &block)
+      @value = value
+      @block = block
+      @is_set = true
+      self
     end
 
     def value
-      if @parent.nil?
-        if @block.nil?
-          @value
-        else
-          @block.call(@value)
-        end
+      v = @value
+      v = v.value while v.is_a? Setting
+
+      if @block.nil?
+        v
       else
-        if @block.nil?
-          @block.call(@parent.value)
-        else
-          @parent.value
-        end
+        @block.call(v)
       end
     end
   end

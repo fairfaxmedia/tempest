@@ -58,31 +58,37 @@ module Tempest
       Library.catalog(name)
     end
 
-    def set(pairs)
+    def set(pairs, &block)
       pairs.each do |key, value|
-        @settings[key] = value
+        if @settings.include?(key)
+          s = @settings[key]
+          raise DuplicateDefinition.new("Setting #{key} redeclared") if s.is_set?
+          s.set(value)
+        else
+          @settings[key] = Setting.new(key, value, &block)
+        end
       end
     end
 
     def setting(key)
-      Setting.new(key)
+      @settings[key] ||= Setting.new(key, settings[key])
     end
 
     def settings
-      settings = {}
+      _settings = {}
       @libraries.each do |lib|
-        settings.merge!(lib.settings)
+        _settings.merge!(lib.settings)
       end
 
       @settings.each do |k, v|
-        if settings.include? k
-          v.wrap(settings.fetch(k))
+        if _settings.include? k
+          v.set(_settings.fetch(k))
         else
-          settings[k] = v
+          _settings[k] = v
         end
       end
 
-      settings.merge!(@settings)
+      _settings
     end
 
     keywords = [

@@ -61,7 +61,7 @@ module Tempest
         unless settings.include?(value.key)
           raise Tempest::ReferenceMissing.new("Invalid setting #{value.key}")
         end
-        compile(settings.fetch(value.key), settings)
+        compile(settings.fetch(value.key).value, settings)
       else
         if value.respond_to? :tempest_h
           compile(value.tempest_h, settings)
