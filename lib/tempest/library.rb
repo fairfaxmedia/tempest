@@ -76,16 +76,13 @@ module Tempest
 
     def settings
       _settings = {}
+
       @libraries.each do |lib|
         _settings.merge!(lib.settings)
       end
 
       @settings.each do |k, v|
-        if _settings.include? k
-          v.set(_settings.fetch(k))
-        else
-          _settings[k] = v
-        end
+        _settings[k] = v
       end
 
       _settings
