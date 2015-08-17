@@ -42,7 +42,7 @@ module Tempest
 
       @referenced = true
 
-      { 'Ref' => Util.mk_id(ref.name) }
+      { 'Ref' => Util.key(ref.name) }
     end
 
     def to_h

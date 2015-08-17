@@ -22,9 +22,9 @@ module Tempest
 
     def compile
       Hash.new.tap do |hash|
-        hash['Type'] = Tempest::Util.mk_id(@type)
+        hash['Type'] = Tempest::Util.key(@type)
         @opts.each do |key, val|
-          hash[Util.mk_id(key)] = Tempest::Util.compile(val)
+          hash[Util.key(key)] = Tempest::Util.compile(val)
         end
       end
     end

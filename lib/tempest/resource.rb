@@ -10,7 +10,7 @@ module Tempest
       RefKey   = 'resources'
 
       def att(*key)
-        key = key.map {|k| Util.mk_id(k) }.join('.')
+        key = key.map {|k| Util.key(k) }.join('.')
         Function.new('Fn::GetAtt', @name, key)
       end
     end
