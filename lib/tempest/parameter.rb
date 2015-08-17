@@ -16,6 +16,10 @@ module Tempest
       @opts = opts
     end
 
+    def ref_id
+      "parameter:#{@name}"
+    end
+
     def compile
       Hash.new.tap do |hash|
         hash['Type'] = Tempest::Util.mk_id(@type)

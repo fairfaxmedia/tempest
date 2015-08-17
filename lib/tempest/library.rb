@@ -126,11 +126,15 @@ module Tempest
       end
 
       define_method(:"all_#{plural}") do
-        map = {}
+        keys = []
         instance_variable_get('@libraries').each do |lib|
-          map.merge!(lib.send(:"all_#{plural}"))
+          keys += lib.send(:"all_#{plural}").keys
         end
-        map.merge!(instance_variable_get("@#{plural}"))
+        keys = (keys + instance_variable_get("@#{plural}").keys).uniq
+        map = {}
+        keys.each do |key|
+          map[key] = send(single, key)
+        end
         map
       end
     end

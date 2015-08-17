@@ -28,6 +28,16 @@ module Tempest
     def to_h
       compiler = Tempest::Compiler.new(settings)
 
+      resource_keys  = all_resources.keys
+      parameter_keys = all_parameters.keys
+
+      conflicts = resource_keys & parameter_keys
+      unless conflicts.empty?
+        # TODO - Create a meta-error that contains many cases?
+        key = conflicts.first
+        err = DuplicateDefinition.new("#{key} used as both a resource and a parameter")
+      end
+
       Hash.new.tap do |hash|
         hash['Description'] = @description unless @description.nil?
 
@@ -35,43 +45,45 @@ module Tempest
         # included. Anything that doesn't get referenced by a resource or
         # output won't be included in the output template.
         resources = {}
-        @resources.each do |name, res|
+        all_resources.each do |name, res|
           resources[name] = res.ref!
         end
         hash['Resources'] = compiler.compile(resources)
 
-        unless @outputs.empty?
+        outs = all_outputs
+        unless outs.empty?
           outs = {}
           @outputs.each do |key, out|
             outs[key] = out.ref! if out.referenced?
           end
-          hash['Outputs'] = Util.compile(outs)
+          hash['Outputs'] = compiler.compile(outs)
         end
 
-        cs = all_conditions.select {|k, v| compiler.seen?(v.ref_key) }
-        ms = all_mappings.select   {|k, v| compiler.seen?(v.ref_key) }
-        ps = all_parameters.select {|k, v| compiler.seen?(v.ref_key) }
+        hash['Conditions'] = {}
+        all_conditions.each do |key, value|
+          next unless compiler.seen?(value.ref_id)
 
-        unless cs.empty?
-          cs.keys.each do |k|
-            cs[k] = cs.delete(k).ref!
-          end
-          hash['Conditions'] = compiler.compile(cs)
+          hash['Conditions'][key] = compiler.compile(value.ref!)
+        end
+        hash
+
+        hash['Mappings'] = {}
+        all_mappings.each do |key, value|
+          next unless compiler.seen?(value.ref_id)
+
+          hash['Mappings'][key] = compiler.compile(value.ref!)
         end
 
-        unless ms.empty?
-          ms.keys.each do |k|
-            ms[k] = ms.delete(k).ref!
-          end
-          hash['Mappings'] = compiler.compile(ms)
+        hash['Parameters'] = {}
+        all_parameters.each do |key, value|
+          next unless compiler.seen?(value.ref_id)
+
+          hash['Parameters'][key] = compiler.compile(value.ref!)
         end
 
-        unless ps.empty?
-          ps.keys.each do |k|
-            ps[k] = ps.delete(k).ref!
-          end
-          hash['Parameters'] = compiler.compile(ps)
-        end
+        hash.delete_if {|key, value| value.empty? }
+
+        hash
       end
     end
 

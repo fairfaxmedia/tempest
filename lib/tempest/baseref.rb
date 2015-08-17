@@ -12,8 +12,8 @@ module Tempest
       @used_at    = []
     end
 
-    def ref_key
-      "#{type_name}:#{name}"
+    def ref_id
+      "#{type_name}:#{@name}"
     end
 
     def referenced?

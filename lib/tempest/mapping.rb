@@ -27,6 +27,10 @@ module Tempest
       @body  = body
     end
 
+    def ref_id
+      "mapping:#{@name}"
+    end
+
     def compile
       Tempest::Util.compile(@body)
     end

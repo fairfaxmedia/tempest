@@ -6,7 +6,7 @@ module Tempest
       RefType  = 'parameter'
       RefKey   = 'parameters'
 
-      def compile_reference
+      def tempest_h
         raise Tempest::Error.new("Cannot reference a Condition directly. Use #if")
       end
 
@@ -24,6 +24,10 @@ module Tempest
       @tmpl = tmpl
       @name = name
       @body = body
+    end
+
+    def ref_id
+      "condition:#{@name}"
     end
 
     def compile_definition

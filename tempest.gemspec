@@ -1,8 +1,12 @@
 # coding: utf-8
 
+$LOAD_PATH.unshift(File.expand_path('../lib', __FILE__))
+
+require 'tempest/version'
+
 Gem::Specification.new do |spec|
   spec.name        = 'tempest'
-  spec.version     = '0.2.2'
+  spec.version     = Tempest::VERSION
   spec.platform    = Gem::Platform::RUBY
   spec.authors     = ['David Baggerman']
   spec.email       = ['david.baggerman@fairfaxmedia.com.au']
