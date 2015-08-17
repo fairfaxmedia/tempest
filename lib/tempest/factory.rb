@@ -10,9 +10,7 @@ module Tempest
       RefKey   = "factories"
 
       def construct(*args)
-        raise ref_missing unless created?
-
-        ref.construct(*args)
+        ref!.construct(@template, *args)
       end
 
       def compile_definition
@@ -48,17 +46,17 @@ module Tempest
     end
 
     def initialize(template, name, args = {}, &block)
-      @template = template
+      @template = template # Unused - but part of the BaseRef #new call
       @name     = name
       @args     = args.keys # FIXME - values should be used for validation (and autoref?)
       @block    = block
     end
 
-    def construct(*params)
+    def construct(template, *params)
       if @args.length != params.length
         raise ArgumentError.new("wrong number of arguments (#{params.length} for #{@args.length})")
       end
-      Construct.new(@template, @args.zip(params)).call(&@block)
+      Construct.new(template, @args.zip(params)).call(&@block)
     end
   end
 end
