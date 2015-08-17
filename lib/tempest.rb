@@ -1,6 +1,4 @@
 module Tempest
-  Setting = Struct.new(:key, :value)
-
   require 'tempest/errors'
   require 'tempest/util'
 
@@ -14,4 +12,5 @@ module Tempest
   require 'tempest/intrinsic'
   require 'tempest/function'
   require 'tempest/factory'
+  require 'tempest/setting'
 end
