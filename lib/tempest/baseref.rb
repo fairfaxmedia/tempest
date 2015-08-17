@@ -12,6 +12,10 @@ module Tempest
       @used_at    = []
     end
 
+    def ref_key
+      "#{type_name}:#{name}"
+    end
+
     def referenced?
       @referenced || (@parent && @parent.referenced?)
     end

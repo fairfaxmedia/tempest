@@ -124,14 +124,15 @@ module Tempest
 
         map[name].tap {|ref| ref.mark_used(called_from) }
       end
-    end
 
-    def all_parameters
-      _params = []
-      @libraries.each do |lib|
-        _params += lib.all_parameters
+      define_method(:"all_#{plural}") do
+        map = {}
+        instance_variable_get('@libraries').each do |lib|
+          map.merge!(lib.send(:"all_#{plural}"))
+        end
+        map.merge!(instance_variable_get("@#{plural}"))
+        map
       end
-      _params = (_params + @parameters.keys).uniq
     end
 
     def has_helper?(name)

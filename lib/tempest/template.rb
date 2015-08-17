@@ -1,5 +1,6 @@
 require 'json'
 require 'tempest/library'
+require 'tempest/compiler'
 
 module Tempest
   class Template < Tempest::Library
@@ -25,7 +26,7 @@ module Tempest
     end
 
     def to_h
-      _settings = settings
+      compiler = Tempest::Compiler.new(settings)
 
       Hash.new.tap do |hash|
         hash['Description'] = @description unless @description.nil?
@@ -37,39 +38,39 @@ module Tempest
         @resources.each do |name, res|
           resources[name] = res.ref!
         end
-        hash['Resources'] = Util.compile(resources, _settings)
+        hash['Resources'] = compiler.compile(resources)
 
         unless @outputs.empty?
           outs = {}
           @outputs.each do |key, out|
             outs[key] = out.ref! if out.referenced?
           end
-          hash['Outputs'] = Util.compile(outs, _settings)
+          hash['Outputs'] = Util.compile(outs)
         end
 
-        unless @conditions.empty?
-          conds = {}
-          @conditions.each do |key, cond|
-            conds[key] = cond.ref! if cond.referenced?
+        cs = all_conditions.select {|k, v| compiler.seen?(v.ref_key) }
+        ms = all_mappings.select   {|k, v| compiler.seen?(v.ref_key) }
+        ps = all_parameters.select {|k, v| compiler.seen?(v.ref_key) }
+
+        unless cs.empty?
+          cs.keys.each do |k|
+            cs[k] = cs.delete(k).ref!
           end
-          hash['Conditions'] = Util.compile(conds, _settings)
+          hash['Conditions'] = compiler.compile(cs)
         end
 
-        unless @mappings.empty?
-          mappings = {}
-          @mappings.each do |key, m|
-            mappings[key] = m.ref! if m.referenced?
+        unless ms.empty?
+          ms.keys.each do |k|
+            ms[k] = ms.delete(k).ref!
           end
-          hash['Mappings'] = Util.compile(mappings, _settings)
+          hash['Mappings'] = compiler.compile(ms)
         end
 
-        unless all_parameters.empty?
-          params = {}
-          all_parameters.each do |key|
-            p = parameter(key)
-            params[key] = p.ref! if p.referenced?
+        unless ps.empty?
+          ps.keys.each do |k|
+            ps[k] = ps.delete(k).ref!
           end
-          hash['Parameters'] = Util.compile(params, _settings)
+          hash['Parameters'] = compiler.compile(ps)
         end
       end
     end
