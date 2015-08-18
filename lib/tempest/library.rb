@@ -59,14 +59,27 @@ module Tempest
     end
 
     def set(pairs, &block)
-      pairs.each do |key, value|
-        if @settings.include?(key)
-          s = @settings[key]
-          raise DuplicateDefinition.new("Setting #{key} redeclared") if s.is_set?
-          s.set(value)
-        else
-          @settings[key] = Setting.new(key, value, &block)
+      case pairs
+      when Hash
+        pairs.each do |key, value|
+          if @settings.include?(key)
+            s = @settings[key]
+            raise DuplicateDefinition.new("Setting #{key} redeclared") if s.is_set?
+            s.set(value)
+          else
+            @settings[key] = Setting.new(key, value, &block)
+          end
         end
+      when String, Symbol, Tempest::Util::Key
+        key = pairs
+        if @settings.include?(key)
+          raise DuplicateDefinition.new("Setting #{key} redeclared")
+        end
+        s = settings[key]
+        if s.nil?
+          raise ReferenceMissing.new("Cannot update setting #{key} without parent")
+        end
+        @settings[key] = Setting.new(key, s, &block)
       end
     end
 
