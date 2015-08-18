@@ -45,4 +45,5 @@ module Tempest
   Base64    = Function.new('Fn::Base64',    1)
   FindInMap = Function.new('Fn::FindInMap', 3)
   GetAZs    = Function.new('Fn::GetAZs',    1)
+  GetAtt    = Function.new('Fn::GetAtt',    2)
 end

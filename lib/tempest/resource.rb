@@ -11,7 +11,7 @@ module Tempest
 
       def att(*key)
         key = key.map {|k| Util.key(k) }.join('.')
-        Function.new('Fn::GetAtt', @name, key)
+        Function::GetAtt.call(@name, key)
       end
     end
 
