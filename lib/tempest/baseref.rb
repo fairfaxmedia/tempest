@@ -26,7 +26,8 @@ module Tempest
         raise DuplicateDefinition.new("Cannot create #{id} as a child of itself")
       end
 
-      @template.send(ref_key)[id] = self.class.new(@template, id, self)
+      new_child = @template.send(ref_key)[id] = self.class.new(@template, id, self)
+      new_child.update(opts)
     end
 
     def with_prefix(prefix, opts = {})
