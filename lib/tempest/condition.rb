@@ -7,7 +7,7 @@ module Tempest
       RefKey   = 'parameters'
 
       def tempest_h
-        raise Tempest::Error.new("Cannot reference a Condition directly. Use #if")
+        @name
       end
 
       def equals(x, y)
@@ -15,7 +15,6 @@ module Tempest
       end
 
       def if(t, f)
-        @referenced = true
         Function::If.call(@name, t, f)
       end
     end

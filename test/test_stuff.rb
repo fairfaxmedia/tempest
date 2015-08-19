@@ -104,4 +104,43 @@ class TestTemplate < Minitest::Test
 
     assert_equal(tmpl.to_h, expected_output)
   end
+
+  def test_conition_output
+    tmpl = Tempest::Template.new do
+      resource(:foo).create(
+        'AWS::EC2::Instance',
+        :condition => condition(:bar),
+        :bar       => condition(:bar).if('Quux', 'Quuz')
+      )
+      condition(:bar).equals('Bar', 'Baz')
+    end
+
+    expected_output = {
+      'Resources' => {
+        'Foo' => {
+          'Type' => 'AWS::EC2::Instance',
+          'Properties' => {
+            'Condition' => 'Bar',
+            'Bar' => {
+              'Fn::If' => [
+                'Bar',
+                'Quux',
+                'Quuz'
+              ]
+            },
+          }
+        }
+      },
+      'Conditions' => {
+        'Bar' => {
+          'Fn::Equals' => [
+            'Bar',
+            'Baz'
+          ]
+        }
+      }
+    }
+
+    assert_equal(tmpl.to_h, expected_output)
+  end
 end
