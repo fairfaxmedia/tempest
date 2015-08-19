@@ -79,4 +79,29 @@ class TestTemplate < Minitest::Test
 
     assert_equal(tmpl.to_h, expected_output)
   end
+
+  def test_mapping_output
+    tmpl = Tempest::Template.new do
+      resource(:foo).create('AWS::EC2::Instance', :bar => 'Baz')
+      output(:bar).create(resource(:foo))
+    end
+
+    expected_output = {
+      'Resources' => {
+        'Foo' => {
+          'Type' => 'AWS::EC2::Instance',
+          'Properties' => {
+            'Bar' => 'Baz',
+          }
+        }
+      },
+      'Outputs' => {
+        'Bar' => {
+          'Value' => { 'Ref' => 'Foo' }
+        }
+      }
+    }
+
+    assert_equal(tmpl.to_h, expected_output)
+  end
 end

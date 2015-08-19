@@ -50,14 +50,11 @@ module Tempest
         end
         hash['Resources'] = compiler.compile(resources)
 
-        outs = all_outputs
-        unless outs.empty?
-          outs = {}
-          @outputs.each do |key, out|
-            outs[key] = out.ref! if out.referenced?
-          end
-          hash['Outputs'] = compiler.compile(outs)
+        outputs = {}
+        all_outputs.each do |name, out|
+          outputs[name] = out.ref!
         end
+        hash['Outputs'] = compiler.compile(outputs)
 
         hash['Conditions'] = {}
         all_conditions.each do |key, value|
