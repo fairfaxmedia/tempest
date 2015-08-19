@@ -44,42 +44,31 @@ module Tempest
         # Resources and outputs are compiled first, since these are always
         # included. Anything that doesn't get referenced by a resource or
         # output won't be included in the output template.
-        resources = {}
-        all_resources.each do |name, res|
-          resources[name] = res.ref!
-        end
-        hash['Resources'] = compiler.compile(resources)
-
-        outputs = {}
-        all_outputs.each do |name, out|
-          outputs[name] = out.ref!
-        end
-        hash['Outputs'] = compiler.compile(outputs)
-
-        hash['Conditions'] = {}
-        all_conditions.each do |key, value|
-          next unless compiler.seen?(value.ref_id)
-
-          hash['Conditions'][key] = compiler.compile(value.ref!)
-        end
-        hash
-
-        hash['Mappings'] = {}
-        maps = all_mappings
-        unless maps.empty?
-          maps.each do |key, value|
-            next unless compiler.seen?(value.ref_id)
-
-            maps[key] = compiler.compile(value.ref!)
+        mandatory_sections = {
+          'Resources' => all_resources,
+          'Outputs'   => all_outputs,
+        }
+        mandatory_sections.each do |key, all_objects|
+          map = {}
+          all_objects.each do |obj_key, object|
+            map[obj_key] = object.ref!
           end
-          hash['Mappings'] = compiler.compile(maps)
+          hash[key] = compiler.compile(map)
         end
 
-        hash['Parameters'] = {}
-        all_parameters.each do |key, value|
-          next unless compiler.seen?(value.ref_id)
+        optional_sections = {
+          'Conditions' => all_conditions,
+          'Mappings'   => all_mappings,
+          'Parameters' => all_parameters,
+        }
 
-          hash['Parameters'][key] = compiler.compile(value.ref!)
+        optional_sections.each do |key, all_objects|
+          map = {}
+          all_objects.each do |obj_key, object|
+            next unless compiler.seen?(object.ref_id)
+            map[obj_key] = object.ref!
+          end
+          hash[key] = compiler.compile(map)
         end
 
         hash.delete_if {|key, value| value.empty? }
