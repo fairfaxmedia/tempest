@@ -68,10 +68,14 @@ module Tempest
         hash
 
         hash['Mappings'] = {}
-        all_mappings.each do |key, value|
-          next unless compiler.seen?(value.ref_id)
+        maps = all_mappings
+        unless maps.empty?
+          maps.each do |key, value|
+            next unless compiler.seen?(value.ref_id)
 
-          hash['Mappings'][key] = compiler.compile(value.ref!)
+            maps[key] = compiler.compile(value.ref!)
+          end
+          hash['Mappings'] = compiler.compile(maps)
         end
 
         hash['Parameters'] = {}

@@ -6,14 +6,12 @@ module Tempest
       RefType  = "mapping"
       RefKey   = "mappings"
 
-      def compile_reference
-        raise "Cannot reference a mapping directly, use the #find method"
+      def tempest_h
+        @name
       end
 
       def find(x, y)
-        # FIXME - This will lead to mappings seeming "referenced", even if the FindInMap result isn't used
-        @referenced = true
-        Function::FindInMap.call(@name, x, y)
+        Function::FindInMap.call(self, x, y)
       end
     end
 

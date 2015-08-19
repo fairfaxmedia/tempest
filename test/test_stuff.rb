@@ -70,7 +70,9 @@ class TestTemplate < Minitest::Test
       },
       "Mappings" => {
         "Bar" => {
-          "Baz" => "Quux"
+          "Bar" => {
+            "Baz" => "Quux"
+          }
         }
       }
     }
