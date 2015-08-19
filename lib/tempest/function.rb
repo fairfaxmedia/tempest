@@ -10,11 +10,6 @@ module Tempest
         @args = args
       end
 
-      def compile_reference
-        { @name => Util.compile(@args) }
-      end
-      alias :compile_declaration :compile_reference
-
       def to_h
         { @name => @args }
       end
